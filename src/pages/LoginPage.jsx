@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
@@ -8,6 +8,9 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loadingGoogle, setLoadingGoogle] = useState(true);
   const [configError, setConfigError] = useState(false);
+  
+  // Use ref to store callback so it doesn't cause re-initialization
+  const callbackRef = useRef();
 
   // Helper function to parse JWT
   const parseJwt = useCallback((token) => {
@@ -39,6 +42,18 @@ const LoginPage = () => {
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: (tokenResponse) => {
+          if (tokenResponse.error) {
+            console.error('OAuth error:', tokenResponse.error);
+            alert('Error al obtener permisos: ' + tokenResponse.error);
+            return;
+          }
+          
+          if (!tokenResponse.access_token) {
+            console.error('No access token received');
+            alert('Error al iniciar sesión. Por favor, intenta de nuevo.');
+            return;
+          }
+          
           console.log('Received OAuth token');
           const userData = {
             email: userInfo.email,
@@ -50,16 +65,25 @@ const LoginPage = () => {
           login(userData);
           navigate('/predictions');
         },
+        error_callback: (error) => {
+          console.error('Token request error:', error);
+          alert('Error al solicitar permisos. Por favor, intenta de nuevo.');
+        },
       });
       
-      // Request access token
+      // Request access token with prompt to force consent screen
       console.log('Requesting access token...');
-      tokenClient.requestAccessToken();
+      tokenClient.requestAccessToken({ prompt: '' });
     } catch (error) {
       console.error('Error handling sign-in:', error);
       alert('Error al iniciar sesión. Por favor, intenta de nuevo.');
     }
   }, [parseJwt, login, navigate]);
+  
+  // Update ref whenever callback changes
+  useEffect(() => {
+    callbackRef.current = handleCredentialResponse;
+  }, [handleCredentialResponse]);
 
   useEffect(() => {
     // If already logged in, redirect to predictions
@@ -144,7 +168,7 @@ const LoginPage = () => {
         console.log('Initializing Google Sign-In...');
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: handleCredentialResponse,
+          callback: (response) => callbackRef.current?.(response),
         });
 
         window.google.accounts.id.renderButton(
@@ -180,7 +204,7 @@ const LoginPage = () => {
         clearTimeout(timeoutId);
       }
     };
-  }, [user, navigate, handleCredentialResponse]);
+  }, [user, navigate]);
 
   return (
     <div className="login-page">
