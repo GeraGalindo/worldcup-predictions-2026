@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { worldCupGroups } from '../data/worldcup2026';
 import { fetchUserPredictions } from '../services/googleSheets';
+import Navigation from '../components/Navigation';
 import './ResultsPage.css';
 
 const ResultsPage = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,7 +89,9 @@ const ResultsPage = () => {
         </div>
       </header>
 
-      <main className="results-content">
+      <Navigation />
+
+      <main className="results-content">{
         <div className="results-summary">
           <div className="summary-card">
             <h3>Puntos Actuales</h3>

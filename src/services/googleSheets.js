@@ -159,3 +159,66 @@ export const fetchUserPredictions = async (userEmail, accessToken) => {
     throw error;
   }
 };
+
+// Fetch all participants for leaderboard
+export const fetchAllParticipants = async (accessToken) => {
+  try {
+    // Fetch columns: Name (C), Email (B), and Points (AN)
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!B:C`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch leaderboard data');
+    }
+    
+    const data = await response.json();
+    const rows = data.values || [];
+    
+    // Skip header row and fetch full rows to get points
+    const participants = [];
+    
+    // Fetch the full data to get points column
+    const fullUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A:AO`;
+    
+    const fullResponse = await fetch(fullUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!fullResponse.ok) {
+      throw new Error('Failed to fetch complete leaderboard data');
+    }
+    
+    const fullData = await fullResponse.json();
+    const fullRows = fullData.values || [];
+    
+    // Skip header row (index 0)
+    for (let i = 1; i < fullRows.length; i++) {
+      const row = fullRows[i];
+      if (row[1] && row[2]) { // Must have email and name
+        participants.push({
+          email: row[1],
+          name: row[2],
+          points: parseInt(row[39]) || 0, // Column AN (index 39)
+          locked: row[40] === 'TRUE', // Column AO (index 40)
+        });
+      }
+    }
+    
+    // Sort by points descending
+    participants.sort((a, b) => b.points - a.points);
+    
+    return participants;
+    
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    throw error;
+  }
+};
+
