@@ -91,7 +91,7 @@ const ResultsPage = () => {
 
       <Navigation />
 
-      <main className="results-content">{
+      <main className="results-content">
         <div className="results-summary">
           <div className="summary-card">
             <h3>Puntos Actuales</h3>
