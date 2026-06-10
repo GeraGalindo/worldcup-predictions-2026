@@ -289,6 +289,56 @@ Replace:
 
 ## Troubleshooting
 
+### Error: "Error al solicitar permisos. Por favor, intenta de nuevo."
+
+**Cause:** The OAuth2 token request is failing. This can happen due to several reasons:
+
+**Solutions:**
+1. **Check if pop-ups are blocked:**
+   - Look for a pop-up blocker icon in your browser's address bar
+   - Allow pop-ups for localhost (or your domain)
+   - Try logging in again
+
+2. **Verify OAuth Client Configuration:**
+   - Go to Google Cloud Console → APIs & Services → Credentials
+   - Click on your OAuth Client ID
+   - **Application type** must be "Web application"
+   - **Authorized JavaScript origins** must include:
+     - `http://localhost:5173` (for local development)
+     - `http://localhost:5174` (if port 5173 is in use)
+     - `http://localhost:5175` (if other ports are in use)
+   - Click "Save" if you made changes
+   - Wait 5 minutes for changes to propagate
+   - Clear your browser cache and try again
+
+3. **Check OAuth Consent Screen:**
+   - Go to Google Cloud Console → APIs & Services → OAuth consent screen
+   - Verify that your Google account is listed in "Test users"
+   - If not, click "Add Users" and add your email
+
+4. **Verify Scopes:**
+   - In OAuth consent screen, check that these scopes are enabled:
+     - `openid`
+     - `profile`  
+     - `email`
+     - `https://www.googleapis.com/auth/spreadsheets`
+
+5. **Try Incognito/Private Mode:**
+   - Sometimes cached credentials cause issues
+   - Open your browser in incognito/private mode
+   - Try logging in again
+
+6. **Check Browser Console:**
+   - Press F12 to open Developer Tools
+   - Go to the Console tab
+   - Look for red error messages
+   - Common errors and solutions:
+     - "popup_closed_by_user": User closed the popup - try again
+     - "access_denied": User denied permission - try again and click "Allow"
+     - "idpiframe_initialization_failed": Third-party cookies blocked - enable them in browser settings
+
+---
+
 ### Error: "Access blocked: This app's request is invalid"
 
 **Cause:** Your production URL is not in the authorized JavaScript origins.

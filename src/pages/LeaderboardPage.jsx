@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchAllParticipants } from '../services/googleSheets';
+import { fetchAllParticipants, fetchActualResults } from '../services/googleSheets';
 import Navigation from '../components/Navigation';
 import './LeaderboardPage.css';
 
@@ -9,6 +9,7 @@ const LeaderboardPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [participants, setParticipants] = useState([]);
+  const [hasResults, setHasResults] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,6 +21,12 @@ const LeaderboardPage = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check if results are available
+      const results = await fetchActualResults(user.accessToken);
+      setHasResults(!!results);
+      
+      // Fetch participants with calculated points
       const data = await fetchAllParticipants(user.accessToken);
       setParticipants(data);
     } catch (err) {
@@ -62,7 +69,21 @@ const LeaderboardPage = () => {
         <div className="leaderboard-content">
           <div className="leaderboard-title">
             <h2>🏆 Tabla de Posiciones</h2>
-            <p>Clasificación de todos los participantes</p>
+            <div className="leaderboard-subtitle">
+              <p>Clasificación de todos los participantes</p>
+              {!loading && (
+                <div className="results-status">
+                  {hasResults ? (
+                    <span className="status-active">✓ Puntos calculados con resultados oficiales</span>
+                  ) : (
+                    <span className="status-pending">⏳ Los puntos se actualizarán cuando se publiquen los resultados</span>
+                  )}
+                  <button onClick={loadLeaderboard} className="refresh-btn" title="Actualizar">
+                    🔄 Actualizar
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {loading ? (

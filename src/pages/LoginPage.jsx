@@ -34,6 +34,14 @@ const LoginPage = () => {
   const handleCredentialResponse = useCallback(async (response) => {
     try {
       console.log('Received credential response');
+      
+      // Verify OAuth2 API is loaded
+      if (!window.google?.accounts?.oauth2) {
+        console.error('Google OAuth2 API not loaded');
+        alert('Error: Google OAuth2 no está disponible. Por favor, recarga la página.');
+        return;
+      }
+      
       // Decode JWT token to get user info
       const userInfo = parseJwt(response.credential);
       
@@ -42,9 +50,26 @@ const LoginPage = () => {
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: (tokenResponse) => {
+          console.log('Token response received:', {
+            hasAccessToken: !!tokenResponse.access_token,
+            hasError: !!tokenResponse.error,
+            error: tokenResponse.error
+          });
+          
           if (tokenResponse.error) {
-            console.error('OAuth error:', tokenResponse.error);
-            alert('Error al obtener permisos: ' + tokenResponse.error);
+            console.error('OAuth error details:', tokenResponse);
+            let errorMessage = 'Error al obtener permisos';
+            
+            // Provide more specific error messages
+            if (tokenResponse.error === 'popup_closed_by_user') {
+              errorMessage = 'Cerraste la ventana de autorización. Por favor, intenta de nuevo.';
+            } else if (tokenResponse.error === 'access_denied') {
+              errorMessage = 'Debes dar permiso a la aplicación para acceder a Google Sheets.';
+            } else {
+              errorMessage += ': ' + tokenResponse.error;
+            }
+            
+            alert(errorMessage);
             return;
           }
           
@@ -54,7 +79,7 @@ const LoginPage = () => {
             return;
           }
           
-          console.log('Received OAuth token');
+          console.log('Successfully received OAuth token');
           const userData = {
             email: userInfo.email,
             name: userInfo.name,
@@ -66,14 +91,28 @@ const LoginPage = () => {
           navigate('/predictions');
         },
         error_callback: (error) => {
-          console.error('Token request error:', error);
-          alert('Error al solicitar permisos. Por favor, intenta de nuevo.');
+          console.error('Token request error callback:', error);
+          
+          // Provide helpful error message
+          let errorMessage = 'Error al solicitar permisos. ';
+          
+          // Check for common issues
+          if (window.location.protocol === 'http:' && !window.location.hostname.includes('localhost')) {
+            errorMessage += 'La aplicación debe ejecutarse en HTTPS o en localhost.';
+          } else {
+            errorMessage += 'Verifica que:\n' +
+              '1. Las ventanas emergentes estén permitidas\n' +
+              '2. El Client ID esté configurado correctamente\n' +
+              '3. Tu email esté en la lista de usuarios de prueba';
+          }
+          
+          alert(errorMessage);
         },
       });
       
-      // Request access token with prompt to force consent screen
-      console.log('Requesting access token...');
-      tokenClient.requestAccessToken({ prompt: '' });
+      // Request access token - omit prompt parameter to use default behavior
+      console.log('Requesting access token with scope: https://www.googleapis.com/auth/spreadsheets');
+      tokenClient.requestAccessToken();
     } catch (error) {
       console.error('Error handling sign-in:', error);
       alert('Error al iniciar sesión. Por favor, intenta de nuevo.');

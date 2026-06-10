@@ -144,10 +144,42 @@
   background: #fafafa;
 }
 
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .group-result-card h3 {
-  margin: 0 0 0.75rem 0;
+  margin: 0;
   color: #1e3c72;
   font-size: 1.2rem;
+}
+
+.group-points-badge {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.predictions-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.predictions-column h4 {
+  margin: 0 0 0.75rem 0;
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .group-teams-small {
@@ -203,6 +235,30 @@
   flex: 1;
   font-weight: 500;
   color: #333;
+}
+
+.points-earned {
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  min-width: 35px;
+  text-align: center;
+}
+
+.points-earned.points-2 {
+  background: #d4edda;
+  color: #155724;
+}
+
+.points-earned.points-1 {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.points-earned.points-0 {
+  background: #f8d7da;
+  color: #721c24;
 }
 
 .error-message {
@@ -265,5 +321,15 @@
   
   .groups-results-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .predictions-comparison {
+    grid-template-columns: 1fr;
+  }
+  
+  .group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
